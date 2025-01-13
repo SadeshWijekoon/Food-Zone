@@ -1,0 +1,72 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js (using Node.js v17 or higher)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '17'  # Use Node.js v17 or higher
+
+      # Step 3: Install server dependencies
+      - name: Install server dependencies
+        run: npm install --prefix server
+
+      # Step 4: Set up MongoDB environment variable
+      - name: Set environment variables
+        run: echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> $GITHUB_ENV
+
+      # Step 5: Install Jest Environment for server
+      - name: Install Jest Environment
+        run: npm install jest-environment-jsdom@29.7.0 --prefix server
+
+      # Step 6: Run server tests
+      - name: Run server tests
+        run: |
+          chmod +x server/node_modules/.bin/jest
+          npm test --prefix server
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js (using Node.js v17 or higher)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '17'  # Use Node.js v17 or higher
+
+      # Step 3: Install Vercel CLI
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      # Step 4: Build client for Vercel deployment
+      - name: Build client
+        run: |
+          cd client
+          npm run build
+
+      # Step 5: Deploy to Vercel
+      - name: Deploy to Vercel
+        run: |
+          vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes --name "my-valid-project-name"
