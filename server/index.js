@@ -1,53 +1,62 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-dotenv.config()
-import cookieParser from 'cookie-parser'
-import morgan from 'morgan'
-import helmet from 'helmet'
-import connectDB from './config/connectDB.js'
-import userRouter from './route/user.route.js'
-import categoryRouter from './route/category.route.js'
-import uploadRouter from './route/upload.router.js'
-import subCategoryRouter from './route/subCategory.route.js'
-import productRouter from './route/product.route.js'
-import cartRouter from './route/cart.route.js'
-import addressRouter from './route/address.route.js'
-import orderRouter from './route/order.route.js'
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+dotenv.config();
+import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
+import helmet from 'helmet';
+import connectDB from './config/connectDB.js';
+import userRouter from './route/user.route.js';
+import categoryRouter from './route/category.route.js';
+import uploadRouter from './route/upload.router.js';
+import subCategoryRouter from './route/subCategory.route.js';
+import productRouter from './route/product.route.js';
+import cartRouter from './route/cart.route.js';
+import addressRouter from './route/address.route.js';
+import orderRouter from './route/order.route.js';
 
-const app = express()
+const app = express();
+
 app.use(cors({
-    credentials : true,
-    origin : process.env.FRONTEND_URL
-}))
-app.use(express.json())
-app.use(cookieParser())
-app.use(morgan("combined"))
+  credentials: true,
+  origin: process.env.FRONTEND_URL,
+}));
+app.use(express.json());
+app.use(cookieParser());
+app.use(morgan("combined"));
 app.use(helmet({
-    crossOriginResourcePolicy : false
-}))
+  crossOriginResourcePolicy: false,
+}));
 
-const PORT = 5000 || process.env.PORT 
+const PORT = 5000 || process.env.PORT;
 
-app.get("/",(request,response)=>{
-    ///server to client
-    response.json({
-        message : "Server is running " + PORT
-    })
-})
+app.get("/", (request, response) => {
+  response.json({
+    message: "Server is running " + PORT,
+  });
+});
 
-app.use('/api/user',userRouter)
-app.use("/api/category",categoryRouter)
-app.use("/api/file",uploadRouter)
-app.use("/api/subcategory",subCategoryRouter)
-app.use("/api/product",productRouter)
-app.use("/api/cart",cartRouter)
-app.use("/api/address",addressRouter)
-app.use('/api/order',orderRouter)
+app.use('/api/user', userRouter);
+app.use("/api/category", categoryRouter);
+app.use("/api/file", uploadRouter);
+app.use("/api/subcategory", subCategoryRouter);
+app.use("/api/product", productRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/address", addressRouter);
+app.use('/api/order', orderRouter);
 
-connectDB().then(()=>{
-    app.listen(PORT,()=>{
-        console.log("Server is running",PORT)
-    })
-})
+const startServer = async () => {
+  await connectDB();
+  if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+      console.log("Server is running", PORT);
+    });
+  }
+};
 
+// Prevent the server from starting during tests
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
+
+export default app;
